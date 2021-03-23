@@ -91,7 +91,6 @@
 </template>
 
 <script>
-  import AddOrUpdate from './user-add-or-update'
   export default {
     data () {
       return {
@@ -108,7 +107,6 @@
       }
     },
     components: {
-      AddOrUpdate
     },
     activated () {
       this.getDataList()
@@ -123,8 +121,7 @@
           params: this.$http.adornParams({
             'page': this.pageIndex,
             'limit': this.pageSize,
-            'username': this.dataForm.userName,
-            'roleId': ''
+            'username': this.dataForm.userName
           })
         }).then(({data}) => {
           if (data && data.code === 0) {

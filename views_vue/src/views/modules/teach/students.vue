@@ -91,8 +91,9 @@
 </template>
 
 <script>
-  import AddOrUpdate from './user-add-or-update'
-  export default {
+  import AddOrUpdate from '../teach/user-add-or-update'
+
+export default {
     data () {
       return {
         dataForm: {
@@ -124,7 +125,7 @@
             'page': this.pageIndex,
             'limit': this.pageSize,
             'username': this.dataForm.userName,
-            'roleId': ''
+            'roleId': '1'
           })
         }).then(({data}) => {
           if (data && data.code === 0) {

@@ -2,12 +2,12 @@
   <div class="mod-user">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.userName" placeholder="用户名" clearable></el-input>
+        <el-input v-model="dataForm.courseName" placeholder="课程名字" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+        <el-button v-if="isAuth('course:info:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+        <el-button v-if="isAuth('course:info:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -23,45 +23,53 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="userId"
+        prop="id"
         header-align="center"
         align="center"
         width="80"
         label="ID">
       </el-table-column>
       <el-table-column
-        prop="username"
+        prop="courseName"
         header-align="center"
         align="center"
-        label="用户名">
+        label="课程">
       </el-table-column>
       <el-table-column
-        prop="email"
+        prop="price"
         header-align="center"
         align="center"
-        label="邮箱">
+        label="价格">
+      </el-table-column>
+<!--      <el-table-column-->
+<!--        prop="status"-->
+<!--        header-align="center"-->
+<!--        align="center"-->
+<!--        label="状态">-->
+<!--        <template slot-scope="scope">-->
+<!--          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>-->
+<!--          <el-tag v-else size="small">正常</el-tag>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
+      <el-table-column
+        prop="sTimeNew"
+        header-align="center"
+        align="center"
+        width="200"
+        label="开始时间">
       </el-table-column>
       <el-table-column
-        prop="mobile"
+        prop="oTimeNew"
         header-align="center"
         align="center"
-        label="手机号">
+        width="200"
+        label="结束时间">
       </el-table-column>
       <el-table-column
-        prop="status"
+        prop="createTimeNew"
         header-align="center"
         align="center"
-        label="状态">
-        <template slot-scope="scope">
-          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
-          <el-tag v-else size="small">正常</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="createTime"
-        header-align="center"
-        align="center"
-        width="180"
+        width="200"
         label="创建时间">
       </el-table-column>
       <el-table-column
@@ -71,8 +79,8 @@
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button v-if="isAuth('sys:user:update')" type="text" size="small" @click="addOrUpdateHandle(scope.row.userId)">修改</el-button>
-          <el-button v-if="isAuth('sys:user:delete')" type="text" size="small" @click="deleteHandle(scope.row.userId)">删除</el-button>
+          <el-button v-if="isAuth('course:info:update')" type="text" size="small" @click="addOrUpdateHandle(scope.row.id, scope.row)">修改</el-button>
+          <el-button v-if="isAuth('course:info:delete')" type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -86,17 +94,18 @@
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
+    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList" :getTeacherId="teacherId"></add-or-update>
   </div>
 </template>
 
 <script>
-  import AddOrUpdate from './user-add-or-update'
-  export default {
+  import AddOrUpdate from './courses-add-or-update'
+
+export default {
     data () {
       return {
         dataForm: {
-          userName: ''
+          courseName: ''
         },
         dataList: [],
         pageIndex: 1,
@@ -104,7 +113,8 @@
         totalPage: 0,
         dataListLoading: false,
         dataListSelections: [],
-        addOrUpdateVisible: false
+        addOrUpdateVisible: false,
+        propsCourse: {}
       }
     },
     components: {
@@ -112,29 +122,63 @@
     },
     activated () {
       this.getDataList()
+      // this.getUserList()
     },
     methods: {
-      // 获取数据列表
-      getDataList () {
-        this.dataListLoading = true
+      // 获取角色列表
+      getUserList () {
         this.$http({
-          url: this.$http.adornUrl('/sys/user/list'),
+          url: this.$http.adornUrl('/sys/user/roleList'),
           method: 'get',
           params: this.$http.adornParams({
-            'page': this.pageIndex,
-            'limit': this.pageSize,
-            'username': this.dataForm.userName,
-            'roleId': ''
+            'roleId': '2'
           })
         }).then(({data}) => {
           if (data && data.code === 0) {
             this.dataList = data.page.list
-            this.totalPage = data.page.totalCount
           } else {
             this.dataList = []
-            this.totalPage = 0
           }
-          this.dataListLoading = false
+        })
+      },
+
+      // 获取数据列表
+      getDataList () {
+        this.dataListLoading = true
+        let that = this
+        this.$http({
+          url: this.$http.adornUrl(`/sys/user/info`),
+          method: 'get',
+          params: this.$http.adornParams()
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            console.log('data', data)
+            that.teacherId = data.user.userId
+            that.$http({
+              url: that.$http.adornUrl('/course/info/list'),
+              method: 'get',
+              params: that.$http.adornParams({
+                'page': that.pageIndex,
+                'limit': that.pageSize,
+                'teacherId': data.user.userId,
+                'courseName': that.dataForm.courseName
+              })
+            }).then(({data}) => {
+              if (data && data.code === 0) {
+                that.dataList = data.page.list.map((item) => {
+                  item.createTimeNew = that.$moment(item.createTime).format('YYYY-MM-DD HH:mm')
+                  item.sTimeNew = item.stime
+                  item.oTimeNew = item.otime
+                  return item
+                })
+                that.totalPage = data.page.totalCount
+              } else {
+                that.dataList = []
+                that.totalPage = 0
+              }
+              that.dataListLoading = false
+            })
+          }
         })
       },
       // 每页数
@@ -153,26 +197,26 @@
         this.dataListSelections = val
       },
       // 新增 / 修改
-      addOrUpdateHandle (id) {
+      addOrUpdateHandle (id, props) {
         this.addOrUpdateVisible = true
         this.$nextTick(() => {
-          this.$refs.addOrUpdate.init(id)
+          this.$refs.addOrUpdate.init(id, props)
         })
       },
       // 删除
       deleteHandle (id) {
-        var userIds = id ? [id] : this.dataListSelections.map(item => {
-          return item.userId
+        var ids = id ? [id] : this.dataListSelections.map(item => {
+          return item.id
         })
-        this.$confirm(`确定对[id=${userIds.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {
+        this.$confirm(`确定对[id=${ids.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/sys/user/delete'),
+            url: this.$http.adornUrl('/course/info/delete'),
             method: 'post',
-            data: this.$http.adornData(userIds, false)
+            data: this.$http.adornData(ids, false)
           }).then(({data}) => {
             if (data && data.code === 0) {
               this.$message({
