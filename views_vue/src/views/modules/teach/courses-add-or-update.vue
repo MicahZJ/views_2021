@@ -7,7 +7,7 @@
       <el-form-item label="课程名" prop="courseName">
         <el-input v-model="dataForm.courseName" placeholder="课程名字"></el-input>
       </el-form-item>
-      <el-form-item label="价格" prop="courseName">
+      <el-form-item label="价格" prop="price">
         <el-input v-model="dataForm.price" placeholder="价格"></el-input>
       </el-form-item>
       <el-form-item label="开始时间" prop="stime" :class="{ 'is-required': !dataForm.id }">
@@ -72,6 +72,7 @@
           })
         }
       },
+
       // 表单提交
       dataFormSubmit () {
         let that = this

@@ -72,9 +72,10 @@ export default {
 
       // 获取数据列表
       async getDataList () {
-        let api = '/live/info/list'
+        let api = '/live/info/studentList'
         let requestData = {
-          name: this.dataForm.liveName
+          name: this.dataForm.liveName,
+          studentId: '7'
         }
 
         let res = await this.$https.axiosGet(api, requestData)

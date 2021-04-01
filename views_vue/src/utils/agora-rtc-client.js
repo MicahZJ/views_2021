@@ -1,5 +1,6 @@
 import AgoraRTC from 'agora-rtc-sdk'
 import EventEmitter from 'events'
+import https from '@/utils/httpTool' // api: https://github.com/axios/axios
 
 export default class RTCClient {
   constructor () {
@@ -13,6 +14,7 @@ export default class RTCClient {
     this.client = null
     this.localStream = null
     this._eventBus = new EventEmitter()
+    this.$Https = https
   }
 
     // 初始化客户端并加入一个频道
@@ -32,6 +34,8 @@ export default class RTCClient {
           }
           resolve()
         }, (err) => {
+          console.log('this', this)
+          this.restart(option.channel)
           console.error('client join failed', err)
         })
       }, (err) => {
@@ -42,6 +46,16 @@ export default class RTCClient {
     })
   }
 
+  async restart (channel) {
+    let api = '/live/info/updateToken'
+    let requestData = {
+      roomName: channel
+    }
+
+    let res = await this.$Https.axiosPost(api, requestData)
+    if (res && res.code === 0) {
+    }
+  }
     // 推流
   publishStream () {
     return new Promise((resolve, reject) => {

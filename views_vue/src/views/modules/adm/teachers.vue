@@ -2,12 +2,12 @@
   <div class="mod-user">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.courseName" placeholder="课程" clearable></el-input>
+        <el-input v-model="dataForm.userName" placeholder="学生" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <!--        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>-->
-        <!--        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>-->
+<!--        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>-->
+        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -23,47 +23,50 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="id"
+        prop="userId"
         header-align="center"
         align="center"
-        width="80"
-        label="ID">
+        label="学生ID">
       </el-table-column>
       <el-table-column
-        prop="courseName"
+        prop="username"
         header-align="center"
         align="center"
-        label="课程名">
+        label="学生">
       </el-table-column>
       <el-table-column
-        prop="email"
+        prop="mobile"
         header-align="center"
         align="center"
-        label="邮箱">
+        label="手机号">
       </el-table-column>
       <el-table-column
-        prop="status"
+        prop="zf"
         header-align="center"
         align="center"
         label="状态">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.type === false" size="small" type="danger">未预约</el-tag>
-          <el-tag v-else size="small">已预约</el-tag>
+          <el-tag v-if="scope.row.zf === 0" size="small" type="danger">未支付</el-tag>
+          <el-tag v-else size="small">已支付</el-tag>
         </template>
       </el-table-column>
       <el-table-column
-        prop="stime"
+        prop="createTime"
         header-align="center"
         align="center"
         width="180"
-        label="开始时间">
+        label="创建时间">
       </el-table-column>
       <el-table-column
-        prop="otime"
+        fixed="right"
         header-align="center"
         align="center"
-        width="180"
-        label="结束时间">
+        width="150"
+        label="操作">
+        <template slot-scope="scope">
+<!--          <el-button v-if="isAuth('sys:user:update')" type="text" size="small" @click="addOrUpdateHandle(scope.row.id, scope.row)">修改分数</el-button>-->
+          <el-button v-if="isAuth('sys:user:delete')" type="text" size="small" @click="deleteHandle(scope.row.userId)">删除</el-button>
+        </template>
       </el-table-column>
     </el-table>
     <el-pagination
@@ -76,14 +79,14 @@
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList" :getStu="studentId"></add-or-update>
+    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
   </div>
 </template>
 
 <script>
-  import AddOrUpdate from './courses-add-or-update'
+  import AddOrUpdate from '../teach/user-add-or-update'
 
-  export default {
+export default {
     data () {
       return {
         dataForm: {
@@ -95,8 +98,7 @@
         totalPage: 0,
         dataListLoading: false,
         dataListSelections: [],
-        addOrUpdateVisible: false,
-        studentId: 0
+        addOrUpdateVisible: false
       }
     },
     components: {
@@ -114,17 +116,14 @@
 
         let res = await this.$https.axiosGet(api, requestData)
         if (res && res.code === 0) {
-          this.studentId = res.user.userId
           this.$http({
-            url: this.$http.adornUrl('/course/student/list'),
+            url: this.$http.adornUrl('/sys/user/list'),
             method: 'get',
             params: this.$http.adornParams({
               'page': this.pageIndex,
               'limit': this.pageSize,
-              'userName': this.dataForm.userName,
-              'courseName': this.dataForm.courseName,
-              'studentId': res.user.userId,
-              'zf': 0
+              'username': this.dataForm.userName,
+              'roleId': '2'
             })
           }).then(({data}) => {
             if (data && data.code === 0) {
@@ -138,20 +137,17 @@
           })
         }
       },
-
       // 每页数
       sizeChangeHandle (val) {
         this.pageSize = val
         this.pageIndex = 1
         this.getDataList()
       },
-
       // 当前页
       currentChangeHandle (val) {
         this.pageIndex = val
         this.getDataList()
       },
-
       // 多选
       selectionChangeHandle (val) {
         this.dataListSelections = val

@@ -1,22 +1,6 @@
 <template>
   <div class="hello">
-    <div class="agora-title-box">
-      <div class="agora-title">Agora Basic Video Call</div>
-    </div>
     <div class='agora-box'>
-        <!-- 饿了么输入框-->
-      <div class="agora-input">
-        <div class="text-agora">* Appid</div>
-        <el-input v-model="options.appid" placeholder="Appid" clearable style="width: 320px"></el-input>
-      </div>
-      <div class="agora-input">
-        <div class="text-agora">Token</div>
-        <el-input v-model="options.token" placeholder="Token" clearable style="width: 320px"></el-input>
-      </div>
-      <div class="agora-input">
-        <div class="text-agora">* Channel Name</div>
-        <el-input v-model="options.channel" placeholder="Channel Name" clearable style="width: 320px"></el-input>
-      </div>
         <!-- 饿了么按钮-->
       <div class="agora-button">
           <!-- 饿了么行布局-->
@@ -70,6 +54,7 @@ export default {
     // 获取传参
     getParams () {
       let params = this.$route.params
+      console.log('params', params)
       this.options.appid = params.appId
       this.options.token = params.token
       this.options.channel = params.name
@@ -86,7 +71,6 @@ export default {
         this.judge('Channel Name')
         return
       }
-      debugger
       this.rtc.joinChannel(this.options).then(() => {
         this.$message({
           message: 'Join Success',

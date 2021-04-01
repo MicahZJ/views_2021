@@ -2,7 +2,7 @@
   <div class="mod-user">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.liveName" placeholder="课程名字" clearable></el-input>
+        <el-input v-model="dataForm.liveName" placeholder="名字" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
@@ -18,7 +18,7 @@
             <span>{{item.name}}</span>
             <div class="bottom clearfix">
               <el-button type="text" class="button" @click="addOrUpdateHandle(item.id, item)">编辑</el-button>
-              <el-button type="text" class="button">删除</el-button>
+              <el-button type="text" class="button" @click="deleteHandle(item.id)">删除</el-button>
             </div>
           </div>
         </el-card>
@@ -71,7 +71,9 @@
       // 获取数据列表
       async getDataList () {
         let api = '/live/info/list'
-        let requestData = {}
+        let requestData = {
+          name: this.dataForm.liveName
+        }
 
         let res = await this.$https.axiosGet(api, requestData)
         if (res && res.code === 0) {
@@ -114,7 +116,7 @@
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/course/info/delete'),
+            url: this.$http.adornUrl('/live/info/delete'),
             method: 'post',
             data: this.$http.adornData(ids, false)
           }).then(({data}) => {
