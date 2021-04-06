@@ -13,7 +13,7 @@
     <el-row class="box">
       <el-col class="box-content" :span="4" v-for="(item, index) in viewsList" :key="item.id">
         <el-card shadow="hover" :body-style="{ padding: '10px' }">
-          <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png" class="image">
+          <img src="~@/assets/img/Snipaste_2021-04-06_16-55-42.png" class="image">
           <div style="padding: 14px;">
             <span>{{item.name}}</span>
             <div class="bottom clearfix">
