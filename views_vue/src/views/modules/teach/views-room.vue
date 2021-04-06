@@ -5,8 +5,8 @@
       <div class="agora-button">
           <!-- 饿了么行布局-->
         <el-row>
-          <el-button type="primary" @click="joinEvent" :disabled='showJoin' style="width: 90px; margin: 10px">join</el-button>
-          <el-button type="primary" @click='leaveEvent' plain :disabled='!showJoin' style="width: 90px; margin: 10px">leave</el-button>
+<!--          <el-button type="primary" @click="joinEvent" :disabled='showJoin' style="width: 90px; margin: 10px">join</el-button>-->
+          <el-button type="primary" @click='leaveEvent' plain :disabled='!showJoin' style="width: 90px; margin: 10px">离开</el-button>
         </el-row>
       </div>
     </div>
@@ -105,6 +105,7 @@ export default {
       })
       this.localStream = null
       this.remoteStreams = []
+      this.$router.go(-1)
     },
     judge (detail) {
       this.$notify({

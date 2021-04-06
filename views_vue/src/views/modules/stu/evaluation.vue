@@ -2,12 +2,12 @@
   <div class="mod-user">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input v-model="dataForm.userName" placeholder="用户名" clearable></el-input>
+        <el-input v-model="dataForm.courseName" placeholder="课程" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+        <!--        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>-->
+        <!--        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>-->
       </el-form-item>
     </el-form>
     <el-table
@@ -23,17 +23,17 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="userId"
+        prop="id"
         header-align="center"
         align="center"
         width="80"
         label="ID">
       </el-table-column>
       <el-table-column
-        prop="username"
+        prop="courseName"
         header-align="center"
         align="center"
-        label="用户名">
+        label="课程名">
       </el-table-column>
       <el-table-column
         prop="email"
@@ -42,27 +42,28 @@
         label="邮箱">
       </el-table-column>
       <el-table-column
-        prop="mobile"
-        header-align="center"
-        align="center"
-        label="手机号">
-      </el-table-column>
-      <el-table-column
         prop="status"
         header-align="center"
         align="center"
         label="状态">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
-          <el-tag v-else size="small">正常</el-tag>
+          <el-tag v-if="scope.row.type === false" size="small" type="danger">未预约</el-tag>
+          <el-tag v-else size="small">已预约</el-tag>
         </template>
       </el-table-column>
       <el-table-column
-        prop="createTime"
+        prop="stime"
         header-align="center"
         align="center"
         width="180"
-        label="创建时间">
+        label="开始时间">
+      </el-table-column>
+      <el-table-column
+        prop="otime"
+        header-align="center"
+        align="center"
+        width="180"
+        label="结束时间">
       </el-table-column>
       <el-table-column
         fixed="right"
@@ -71,8 +72,8 @@
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button v-if="isAuth('sys:user:update')" type="text" size="small" @click="addOrUpdateHandle(scope.row.userId)">修改</el-button>
-          <el-button v-if="isAuth('sys:user:delete')" type="text" size="small" @click="deleteHandle(scope.row.userId)">删除</el-button>
+          <el-button v-if="isAuth('course:student:save')" type="text" size="small" @click="addOrUpdateHandle(scope.row.id, scope.row)">评价</el-button>
+<!--          <el-button disabled v-else type="text" size="small" @click="addOrUpdateHandle(scope.row.id, scope.row)">评价</el-button>-->
         </template>
       </el-table-column>
     </el-table>
@@ -86,11 +87,13 @@
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
+    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList" :getStu="studentId"></add-or-update>
   </div>
 </template>
 
 <script>
+  import AddOrUpdate from './evaluation-add-or-update'
+
   export default {
     data () {
       return {
@@ -103,57 +106,72 @@
         totalPage: 0,
         dataListLoading: false,
         dataListSelections: [],
-        addOrUpdateVisible: false
+        addOrUpdateVisible: false,
+        studentId: 0
       }
     },
     components: {
+      AddOrUpdate
     },
     activated () {
       this.getDataList()
     },
     methods: {
       // 获取数据列表
-      getDataList () {
+      async getDataList () {
         this.dataListLoading = true
-        this.$http({
-          url: this.$http.adornUrl('/sys/user/list'),
-          method: 'get',
-          params: this.$http.adornParams({
-            'page': this.pageIndex,
-            'limit': this.pageSize,
-            'username': this.dataForm.userName
+        let api = '/sys/user/info'
+        let requestData = {}
+
+        let res = await this.$https.axiosGet(api, requestData)
+        if (res && res.code === 0) {
+          this.studentId = res.user.userId
+          this.$http({
+            url: this.$http.adornUrl('/course/student/list'),
+            method: 'get',
+            params: this.$http.adornParams({
+              'page': this.pageIndex,
+              'limit': this.pageSize,
+              'userName': this.dataForm.userName,
+              'courseName': this.dataForm.courseName,
+              'studentId': res.user.userId,
+              'zf': 0
+            })
+          }).then(({data}) => {
+            if (data && data.code === 0) {
+              this.dataList = data.page.list
+              this.totalPage = data.page.totalCount
+            } else {
+              this.dataList = []
+              this.totalPage = 0
+            }
+            this.dataListLoading = false
           })
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            this.dataList = data.page.list
-            this.totalPage = data.page.totalCount
-          } else {
-            this.dataList = []
-            this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
+        }
       },
+
       // 每页数
       sizeChangeHandle (val) {
         this.pageSize = val
         this.pageIndex = 1
         this.getDataList()
       },
+
       // 当前页
       currentChangeHandle (val) {
         this.pageIndex = val
         this.getDataList()
       },
+
       // 多选
       selectionChangeHandle (val) {
         this.dataListSelections = val
       },
       // 新增 / 修改
-      addOrUpdateHandle (id) {
+      addOrUpdateHandle (id, props) {
         this.addOrUpdateVisible = true
         this.$nextTick(() => {
-          this.$refs.addOrUpdate.init(id)
+          this.$refs.addOrUpdate.init(this.studentId, props)
         })
       },
       // 删除

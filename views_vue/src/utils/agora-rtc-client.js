@@ -34,8 +34,9 @@ export default class RTCClient {
           }
           resolve()
         }, (err) => {
+          // debugger
           console.log('this', this)
-          this.restart(option.channel)
+          this.restart(option)
           console.error('client join failed', err)
         })
       }, (err) => {
@@ -46,14 +47,15 @@ export default class RTCClient {
     })
   }
 
-  async restart (channel) {
+  async restart (option) {
     let api = '/live/info/updateToken'
     let requestData = {
-      roomName: channel
+      roomName: option.channel
     }
 
     let res = await this.$Https.axiosPost(api, requestData)
     if (res && res.code === 0) {
+      // this.joinChannel(option)
     }
   }
     // 推流
